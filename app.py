@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 
 import icalendar
-from flask import Flask
+from flask import Flask, Response
 
 from ahotlunch import create_login_session, get_calendar
 
@@ -30,7 +30,7 @@ session = create_login_session(
 def _create_calendar():
     cal = icalendar.Calendar()
     cal.add("prodid", "-//github.com/billnapier/ahotlunch_ical//")
-    cal.add("version", "1.0")
+    cal.add("version", "2.0")
     return cal
 
 
@@ -48,6 +48,8 @@ def root():
         item = item[0]
 
         event = icalendar.Event()
+        event['uid'] = item.get('id')
+
         created_date = datetime.strptime(item.get("createdDate"), _DATE_TIME_FORMAT)
         order_date = datetime.strptime(item.get("orderDate"), _DATE_TIME_FORMAT)
         start_date = datetime(
@@ -61,7 +63,7 @@ def root():
             year=order_date.year,
             month=order_date.month,
             day=order_date.day,
-            hour=1,
+            hour=13,
             tzinfo=pytz.timezone("America/Los_Angeles"),
         )
 
@@ -71,8 +73,7 @@ def root():
         event.add("dtstamp", created_date)
 
         cal.add_component(event)
-    return cal.to_ical()
-
+    return  Response(cal.to_ical(), mimetype='text/calendar')
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
