@@ -1,10 +1,13 @@
+"""ahotlunch.com api."""
+import json
+import os
+from datetime import datetime
+from urllib.parse import urljoin
+
 import html5lib
 import requests
 from absl import logging
 from configobj import ConfigObj
-
-import json
-import os
 
 # a lot borrowed from https://github.com/google/github_nonpublic_api.  Which means that maybe some of that should live in it's own library?
 
@@ -75,37 +78,48 @@ def _get_url_with_session(session, url: str):
 
 
 def create_login_session(
-    username: str, password: str, session: requests.Session = None
+    instance: str, username: str, password: str, session: requests.Session = None
 ) -> requests.Session:
     """Create a requests.Session object with logged in GitHub cookies for the user."""
 
     session = session or requests.Session()
-    resp = session.post('https://mygreenlunch.ahotlunch.com/login/check', dict(login=username, password=password))
+    response = session.post(
+        "https://%s.ahotlunch.com/login/check" % instance,
+        dict(login=username, password=password),
+    )
+    response.raise_for_status()
     return session
 
 
-_CALENDAR_URL = "https://mygreenlunch.ahotlunch.com/order/cGet?endDate=%s&startDate=%s&typeId="
+_CALENDAR_URL = "https://%s.ahotlunch.com/order/cGet?endDate=%s&startDate=%s&typeId="
 
-def get_calendar(s, start_date, end_date):
-    resp = s.get(_CALENDAR_URL % (end_date, start_date))
+
+def get_calendar(s, instance: str, start_date: str, end_date: str):
+    resp = s.get(_CALENDAR_URL % (instance, end_date, start_date))
     resp.raise_for_status()
     data = json.loads(resp.content)
-    if data.get('status') != 'success':
-        raise ValueError(data.get('status'))
-    return data.get('data')
+    if data.get("status") != "success":
+        raise ValueError(data.get("status"))
+    return data.get("data")
+
 
 def main():
     config = ConfigObj(os.path.expanduser("~/ahotlunch.ini"), _inspec=True)
 
     s = create_login_session(
-        username=config.get("username"), password=config.get("password")
+        instance="mygreenlunch",
+        username=config.get("username"),
+        password=config.get("password"),
     )
-    
-    data = get_calendar(s, '2023-09-01', '2023-12-31')
+
+    data = get_calendar(
+        s, instance="mygreenlunch", start_date="2023-09-01", end_date="2023-12-31"
+    )
     for item in data.values():
         item = item[0]
-        print(item.get('name'), item.get('orderDate'))
-
+        created_date = datetime.strptime(item.get('createdDate'), '%Y-%m-%d %H:%M:%S')
+        print(item.get("name"), item.get("orderDate"))
+        print(created_date)
 
 
 if __name__ == "__main__":
