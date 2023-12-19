@@ -4,4 +4,4 @@ configobj==5.0.8
 html5lib==1.1
 requests==2.31.0
 absl-py==2.0.0
-icalendar==5.0.10
+icalendar==5.0.11
