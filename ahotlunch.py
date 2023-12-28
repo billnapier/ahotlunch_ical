@@ -114,8 +114,8 @@ def main():
     )
 
     now = datetime.now()
-    start_date = now - timedelta(weeks=26)
-    end_date = now - timedelta(week=26)
+    start_date = now - timedelta(days=90)
+    end_date = now - timedelta(days=90)
     data = get_calendar(
         s, instance="mygreenlunch", start_date=start_date, end_date=end_date
     )
