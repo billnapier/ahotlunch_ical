@@ -1,6 +1,6 @@
 """Main app."""
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 import icalendar
@@ -41,8 +41,11 @@ _DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def root():
     cal = _create_calendar()
 
+    now = datetime.now()
+    start_date = now - timedelta(weeks=26)
+    end_date = now - timedelta(week=26)
     data = get_calendar(
-        session, instance="mygreenlunch", start_date="2023-09-01", end_date="2023-12-31"
+        session, instance="mygreenlunch", start_date=start_date, end_date=end_date
     )
     for item in data.values():
         item = item[0]
