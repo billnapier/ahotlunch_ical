@@ -1,7 +1,7 @@
 """ahotlunch.com api."""
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urljoin
 
 import html5lib
@@ -92,10 +92,11 @@ def create_login_session(
 
 
 _CALENDAR_URL = "https://%s.ahotlunch.com/order/cGet?endDate=%s&startDate=%s&typeId="
+_DATE_FORMAT = ""
 
 
-def get_calendar(s, instance: str, start_date: str, end_date: str):
-    resp = s.get(_CALENDAR_URL % (instance, end_date, start_date))
+def get_calendar(s, instance: str, start_date: datetime, end_date: datetime):
+    resp = s.get(_CALENDAR_URL % (instance, end_date.strftime(_DATE_FORMAT), start_date.strftime(_DATE_FORMAT)))
     resp.raise_for_status()
     data = json.loads(resp.content)
     if data.get("status") != "success":
@@ -112,8 +113,11 @@ def main():
         password=config.get("password"),
     )
 
+    now = datetime.now()
+    start_date = now - timedelta(weeks=26)
+    end_date = now - timedelta(week=26)
     data = get_calendar(
-        s, instance="mygreenlunch", start_date="2023-09-01", end_date="2023-12-31"
+        s, instance="mygreenlunch", start_date=start_date, end_date=end_date
     )
     for item in data.values():
         item = item[0]
